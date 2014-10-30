@@ -527,39 +527,43 @@ public class AutoUpdate extends Thread implements ActionListener, ItemListener, 
 			cancelHide("Could not install or relaunch: " + ex.getMessage());
 		}
 	}
-	private void getHttpContent(String url, OutputStream out) throws IOException {
-		URL u = new URL(url); 
-		HttpURLConnection huc = (HttpURLConnection) u.openConnection();
-		huc.setRequestMethod("GET"); 
-		huc.connect(); 
-		int code = huc.getResponseCode();
-		if (code >= 200 && code < 300) {
+	private String getHttpContent(String url, OutputStream out) throws IOException {
+		URL u; 
+		HttpURLConnection huc;
+		while (true) {
+			u = new URL(url);
+			huc = (HttpURLConnection) u.openConnection();
+			huc.setRequestMethod("GET"); 
+			huc.connect(); 
+			int code = huc.getResponseCode();
+			if (code >= 200 && code < 300) {
+				break;
+			} else if (code == HttpURLConnection.HTTP_MOVED_PERM ||
+				code == HttpURLConnection.HTTP_MOVED_TEMP) {
+				url = huc.getHeaderField("Location");
+			} else {
+				throw new IOException("Response code is "+code);
+			}
+		}
+		if (out != null) {
 			int length = huc.getContentLength();
 			copyInputStream(huc.getInputStream(), out, length);
 			out.close();
+			huc.disconnect();
+			return null;
 		} else {
-			throw new IOException("Response code is "+code);
-		}
-		huc.disconnect();
-	}
-	private String getHttpContent(String url) throws IOException {
-		URL u = new URL(url); 
-		HttpURLConnection huc = (HttpURLConnection) u.openConnection();
-		huc.setRequestMethod("GET"); 
-		huc.connect(); 
-		int code = huc.getResponseCode();
-		StringBuffer result = new StringBuffer();
-		if (code >= 200 && code < 300) {
 			BufferedReader in = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+			StringBuffer result = new StringBuffer();
 			String line;
 			while ((line = in.readLine()) != null) {
 				result.append(line);
 			}
-		} else {
-			throw new IOException("Response code is "+code);
+			huc.disconnect();
+			return result.toString();
 		}
-		huc.disconnect();
-		return result.toString();
+	}
+	private String getHttpContent(String url) throws IOException {
+		return getHttpContent(url, null);
 	}
 	private void copyInputStream(InputStream in, OutputStream out, int length) throws IOException {
 		byte[] buffer = new byte[1024];

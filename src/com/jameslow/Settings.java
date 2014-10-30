@@ -45,9 +45,7 @@ public class Settings {
 	private boolean allowminor;
 	private boolean allowexperimental;
 	private boolean allowautoupdate;
-	private boolean usegoogle;
 	private String xmllinkbase;
-	private String googleproject;
 	
 	public static final String HEIGHT = "Height";
 	public static final String WIDTH = "Width";
@@ -138,9 +136,7 @@ public class Settings {
 			version = getProperty(build,"build.version");
 			mainclass = getProperty(build,"main.class");
 			title = getProperty(build,"application.name");
-			usegoogle = checkBooleanProperty(build,"autoupdate.usegoogle");
 			xmllinkbase = getProperty(build,"autoupdate.xmllinkbase");
-			googleproject = getProperty(build,"google.project");
 			//mainclass = readManifest(Attributes.Name.MAIN_CLASS);
 			//build = readManifest("Build-Number");
 			//version = readManifest("Build-Version");
@@ -153,11 +149,7 @@ public class Settings {
 			logtoconsole = getBooleanProperty("log.toconsole");
 			updateurl = getProperty("update.url");
 			if (updateurl == null || "".compareTo(updateurl) == 0) {
-				if (usegoogle) {
-					updateurl = "http://" + googleproject + ".googlecode.com/files/" + title + ".xml";
-				} else {
-					updateurl = xmllinkbase + "/" + title + ".xml";
-				}
+				updateurl = xmllinkbase + title + ".xml";
 			}
 			minor = getBooleanProperty("update.minor");
 			experimental = getBooleanProperty("update.experimental");

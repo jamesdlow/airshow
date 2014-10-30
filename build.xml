@@ -231,7 +231,7 @@
 	<condition property="applinkbase" value="${autoupdate.applinkbase}">
 		<matches string="${autoupdate.applinkbase}" pattern=".+"/>
 	</condition>
-	<condition property="applinkbase" value="http://${google.project}.googlecode.com/files">
+	<condition property="applinkbase" value="http://${google.project}.googlecode.com/files/">
 		<and>
 			<not><isset property="applinkbase"/></not>
 			<isset property="autoupdate.google"/>
@@ -250,6 +250,9 @@
 			<isset property="autoupdate.github"/>
 		</and>
 	</condition>
+	<propertyfile file="${props}">
+		<entry key="autoupdate.applinkbase" value="${applinkbase}"/>
+	</propertyfile>
 	<!-- Auto update xml paths -->
 	<condition property="xmllinkbase" value="${autoupdate.xmllinkbase}">
 		<matches string="${autoupdate.xmllinkbase}" pattern=".+"/>
@@ -274,6 +277,9 @@
 			<isset property="autoupdate.github"/>
 		</and>
 	</condition>
+	<propertyfile file="${props}">
+		<entry key="autoupdate.xmllinkbase" value="${xmllinkbase}"/>
+	</propertyfile>
 	
 	<!-- Platform detection -->
 	<condition property="is.mac">
@@ -567,23 +573,20 @@
 		/>
 	</target>
 
-	<fileset id="uploadfiles" dir="${dist}" casesensitive="yes">
-		<!-- Right not this will be included if you upload to GitHub as well as doing and upload do S3 or FTP which take priority -->
-		<include name="${atomfile}" if="${autoupdate.upload}"/>
-		<include name="${source.zip}" if="${autoupdate.dosource}"/>
-		<include name="${mac.dmg}"/>
-		<include name="${mac.zip}"/>
-		<include name="${win.zip}"/>
-		<include name="${other.zip}"/>
-	</fileset>
-
 	<target name="ftp" description="Deploy All To FTP Location" depends="release" if="upload.ftp">
 		<ftp server="${ftp.server}"
 			port="${ftp.port}"
 			remotedir="${ftp.dir}"
 			userid="${ftp.username}"
 			password="${ftp.password}">
-			<fileset refid="uploadfiles"/>
+			<fileset dir="${dist}" casesensitive="yes">
+				<include name="${atomfile}" if="${autoupdate.upload}"/>
+				<include name="${source.zip}" if="${autoupdate.dosource}"/>
+				<include name="${mac.dmg}"/>
+				<include name="${mac.zip}"/>
+				<include name="${win.zip}"/>
+				<include name="${other.zip}"/>
+			</fileset>
 		</ftp>
 	</target>
 
@@ -672,8 +675,13 @@
 			repo="${github.repo}"
 			tokenuser="${github.tokenuser}"
 			token="${github.token}"
-			tag="${new.version}">
-			<fileset refid="uploadfiles"/>
+			tag="${build.version}">
+			<fileset dir="${dist}" casesensitive="yes">
+				<include name="${mac.dmg}"/>
+				<include name="${mac.zip}"/>
+				<include name="${win.zip}"/>
+				<include name="${other.zip}"/>
+			</fileset>
 		</github.fullrelease>
 	</target>
 
@@ -683,7 +691,14 @@
 			secretKey="${aws.secret}"
 			bucket="${aws.s3}"
 			publicRead="true">
-			<fileset refid="uploadfiles"/>
+			<fileset dir="${dist}" casesensitive="yes">
+				<include name="${atomfile}" if="${autoupdate.upload}"/>
+				<include name="${source.zip}" if="${autoupdate.dosource}"/>
+				<include name="${mac.dmg}"/>
+				<include name="${mac.zip}"/>
+				<include name="${win.zip}"/>
+				<include name="${other.zip}"/>
+			</fileset>
 		</s3upload>
 	</target>
 
