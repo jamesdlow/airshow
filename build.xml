@@ -244,7 +244,7 @@
 			<isset property="autoupdate.s3"/>
 		</and>
 	</condition>
-	<condition property="applinkbase" value="http://github.com/${github.repouser}/${github.repo}/releases/download/%version%/">
+	<condition property="applinkbase" value="https://github.com/${github.repouser}/${github.repo}/releases/download/%version%/">
 		<and>
 			<not><isset property="applinkbase"/></not>
 			<isset property="autoupdate.github"/>
@@ -669,7 +669,7 @@
 			labels="Featured, OpSys-Windows, Type-Executable, ${name}"/>
 	</target>
 
-	<target name="github" description="Deploy All To GitHub" depends="release" if="upload.github">
+	<target name="github" description="Deploy All To GitHub" depends="autoupdate" if="upload.github">
 		<github.fullrelease
 			repouser="${github.repouser}"
 			repo="${github.repo}"
@@ -685,7 +685,7 @@
 		</github.fullrelease>
 	</target>
 
-	<target name="s3" if="upload.s3">
+	<target name="s3" depends="autoupdate" if="upload.s3">
 		<s3upload verbose="true"
 			accessId="${aws.key}"
 			secretKey="${aws.secret}"
