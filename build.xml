@@ -54,6 +54,8 @@
 	</condition>
 
 	<!-- Ant tasks -->
+	<taskdef classname="com.jameslow.update.Generator" classpath="${autoupdate}" name="autoupdate"/>
+
 	<fileset id="jar.jars" dir="${jarbundler}">
 		<include name="**/*.jar"/>
 	</fileset>
