@@ -6,13 +6,15 @@ import java.io.File;
 import java.util.*;
 import java.text.SimpleDateFormat; 
 import javax.swing.*;
+import org.apache.tools.ant.*;
 import com.jameslow.*;
 
-public class Generator extends JFrame implements WindowListener, ItemListener, ActionListener {
+public class Generator extends Task implements WindowListener, ItemListener, ActionListener {
 	//Other
 	private volatile boolean active = true;
 	private String versionpage;
 	private boolean experimental;
+	private JFrame frame = new JFrame();
 	private JLabel contentlabel = new JLabel("Enter version information (html ok) here:");
 	private JTextArea contenttextarea = new JTextArea();
 	private JPanel bottompanel = new JPanel();
@@ -27,6 +29,7 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 	//Generated
 	private String atomfile;
 	private String timestamp;
+	private String returnproperty;
 	
 	//General
 	private String atompath;
@@ -78,7 +81,8 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 	private static final String d = ".";
 	private static final String VERSION = "%version%";
 
-	public Generator() {
+	public Generator() { }
+	public void init() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			System.setProperty("com.apple.mrj.application.apple.menu.about.name",AUTOUPDATE);
@@ -94,11 +98,11 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		addWindowListener(this);
+		frame.addWindowListener(this);
 		experientalbutton.addItemListener(this);
 		donebutton.addActionListener(this);
-		setBounds(0, 0, 500, 400);
-		Container pane = getContentPane();
+		frame.setBounds(0, 0, 500, 400);
+		Container pane = frame.getContentPane();
 		pane.add(contentlabel,BorderLayout.NORTH);
 		pane.add(contentscroll,BorderLayout.CENTER);
 		bottompanel.setLayout(new GridLayout(2,2));
@@ -125,7 +129,7 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 		Object source = e.getSource();
 		if (source == donebutton) {
 			active = false;
-			hide();
+			frame.hide();
 		}
 	}
 	public void itemStateChanged(ItemEvent e) {
@@ -136,6 +140,9 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 	}
 	
 	//General
+	public void setReturnProperty(String returnproperty) {
+		this.returnproperty = returnproperty;
+	}
 	public void setAtompath(String atompath) {
 		this.atompath = atompath;
 	}
@@ -221,7 +228,14 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 		createZipLink(entry,"Other",otherzip);
 		createZipLink(entry,"Source",sourcezip);
 		createEnclosureLink(entry,appname+" Mac Disk Image",macdmg,MIME_DMG);
-		entry.setValue(ATOM_CONTENT,contenttextarea.getText());
+		String versioninfo = contenttextarea.getText();
+		entry.setValue(ATOM_CONTENT,versioninfo);
+		
+		//Return version information for use in upload info
+		if (returnproperty != null) {
+			getProject().setProperty(returnproperty, versioninfo);
+		}
+
 		
 		//Save
 		helper.save(atompath);
@@ -248,6 +262,7 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 		return str.replaceAll(VERSION, version);
 	}
 	public void execute() {
+		init();
 		//derived properties
 		xmllinkbase = xmllinkbase != null ? xmllinkbase : applinkbase;
 		xmllinkbase = replaceVersion(xmllinkbase);
@@ -263,7 +278,7 @@ public class Generator extends JFrame implements WindowListener, ItemListener, A
 		//show user form
 		String versionpagedefault = apppage+(apppage.lastIndexOf("?")>=0 ? "&" : "?" )+LIMEGREENBUILD+"="+build;
 		versionpagefield.setText(versionpagedefault);
-		show();
+		frame.show();
 		
 		while (active) {
 			//this will finish once the user clicks done

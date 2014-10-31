@@ -531,7 +531,9 @@
 			sourcezip="${autoupdate.source.zip.full}"
 			build="${build.number}"
 			version="${new.version}"
+			returnproperty="version.info"
 		/>
+		<echo message="${version.info}"/>
 	</target>
 
 	<target name="ftp" description="Deploy All To FTP Location" depends="release" if="upload.ftp">
@@ -590,7 +592,8 @@
 			repo="${github.repo}"
 			tokenuser="${github.tokenuser}"
 			token="${github.token}"
-			tag="${build.version}">
+			tag="${build.version}"
+			body="${version.info}">
 			<fileset dir="${dist}" casesensitive="yes">
 				<include name="${mac.dmg}"/>
 				<include name="${mac.zip}"/>
