@@ -25,7 +25,6 @@
 			<property name="jsmooth.edit" location="${jsmooth}/editor"/>
 			<property name="jsmooth.infile" location="${jsmooth}/ant.jsmooth"/>
 		<property name="applejava" location="${tools}/applejava"/>
-		<property name="google" location="${tools}/google"/>
 		<property name="github" location="${tools}/github"/>
 		<property name="s3upload" location="${tools}/s3upload"/>
 	<!-- Output Directories -->
@@ -70,15 +69,6 @@
 		<fileset refid="jsmooth.jars"/>
 	</path>
 	<taskdef name="jsmoothgen" classname="net.charabia.jsmoothgen.ant.JSmoothGen" classpathref="jsmooth.path"/>
-
-	<fileset id="google.jars" dir="${google}">
-		<include name="**/*.jar"/>
-	</fileset>
-	<path id="google.path">
-		<fileset refid="google.jars"/>
-	</path>
-	<taskdef classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask" classpathref="google.path" name="gcupload"/>
-	<taskdef classname="com.jameslow.update.Generator" classpath="${autoupdate}" name="autoupdate"/>
 
 	<fileset id="ant.jars" dir="${antlib}">
 		<include name="**/*.jar"/>
@@ -152,9 +142,6 @@
 	<condition property="upload.github">
 		<matches string="${github.tokenuser}" pattern=".+"/>
 	</condition>
-	<condition property="upload.google">
-		<matches string="${google.username}" pattern=".+"/>
-	</condition>
 	<condition property="upload.sourceforge">
 		<matches string="${sourceforge.username}" pattern=".+"/>
 	</condition>
@@ -184,18 +171,11 @@
 			<not><isset property="autoupdate.ftp"/></not>
 		</and>
 	</condition>
-	<condition property="autoupdate.google">
-		<and>
-			<isset property="autoupdate.do"/>
-			<isset property="upload.google"/>
-			<not><isset property="autoupdate.github"/></not>
-		</and>
-	</condition>
 	<condition property="autoupdate.sourceforge">
 		<and>
 			<isset property="autoupdate.do"/>
 			<isset property="upload.sourceforge"/>
-			<not><isset property="autoupdate.google"/></not>
+			<not><isset property="autoupdate.github"/></not>
 		</and>
 	</condition>
 	<!-- Other auto update -->
@@ -208,7 +188,6 @@
 			<or>
 				<isset property="autoupdate.s3"/>
 				<isset property="autoupdate.ftp"/>
-				<isset property="autoupdate.google"/>
 			</or>
 		</and>
 	</condition>
@@ -217,25 +196,12 @@
 			<contains string="${autoupdate.type}" substring="source"/>
 			<or>
 				<isset property="autoupdate.github"/>
-				<isset property="autoupdate.google"/>
 			</or>
-		</and>
-	</condition>
-	<condition property="google.autoupdate">
-		<and>
-			<isset property="autoupdate.google"/>
-			<isset property="autoupdate.upload"/>
 		</and>
 	</condition>
 	<!-- Auto update paths -->
 	<condition property="applinkbase" value="${autoupdate.applinkbase}">
 		<matches string="${autoupdate.applinkbase}" pattern=".+"/>
-	</condition>
-	<condition property="applinkbase" value="http://${google.project}.googlecode.com/files/">
-		<and>
-			<not><isset property="applinkbase"/></not>
-			<isset property="autoupdate.google"/>
-		</and>
 	</condition>
 	<condition property="applinkbase" value="http://s3.amazonaws.com/${aws.s3}">
 		<!-- This can be overridden to use your own domain name by hard coding autoupdate.applinkbase in the build.properties file -->
@@ -261,13 +227,6 @@
 		<and>
 			<not><isset property="xmllinkbase"/></not>
 			<isset property="autoupdate.upload"/>
-		</and>
-	</condition>
-	<condition property="xmllinkbase" value="http://${google.project}.googlecode.com/svn/trunk/">
-		<and>
-			<not><isset property="xmllinkbase"/></not>
-			<isset property="autoupdate.source"/>
-			<isset property="autoupdate.google"/>
 		</and>
 	</condition>
 	<condition property="xmllinkbase" value="https://raw.githubusercontent.com/${github.repouser}/${github.repo}/master/">
@@ -622,52 +581,6 @@
 				processortype="i386"/>
 		</sfpublish>
 	</target>
-	
-	<target name="google.autoupdate" description="Deploy Autoupdate File To Google" depends="autoupdate" if="google.autoupdate">
-		<gcupload
-			username="${google.username}"
-			password="${google.password}"
-			projectname="${google.project}"
-			filename="${atompath}"
-			targetfilename="${atomfile}"
-			summary="${name} Autoupdate"
-			labels="${name}"/>
-	</target>
-	
-	<target name="google" description="Deploy All To GoogleCode" depends="release,google.autoupdate" if="upload.google">
-		<gcupload
-			username="${google.username}"
-			password="${google.password}"
-			projectname="${google.project}"
-			filename="${source.zip.full}"
-			targetfilename="${source.zip}"
-			summary="${name} Source"
-			labels="OpSys-Windows, Type-Source, ${name}"/>
-		<gcupload
-			username="${google.username}"
-			password="${google.password}"
-			projectname="${google.project}"
-			filename="${other.zip.full}"
-			targetfilename="${other.zip}"
-			summary="${name} All Platforms"
-			labels="Featured, OpSys-All, OpSys-Linux, Type-Executable, ${name}"/>
-		<gcupload
-			username="${google.username}"
-			password="${google.password}"
-			projectname="${google.project}"
-			filename="${mac.dmg.full}"
-			targetfilename="${mac.dmg}"
-			summary="${name} Mac OSX"
-			labels="Featured, OpSys-OSX, Type-Executable, ${name}"/>
-		<gcupload
-			username="${google.username}"
-			password="${google.password}"
-			projectname="${google.project}"
-			filename="${win.zip.full}"
-			targetfilename="${win.zip}"
-			summary="${name} Windows"
-			labels="Featured, OpSys-Windows, Type-Executable, ${name}"/>
-	</target>
 
 	<target name="github" description="Deploy All To GitHub" depends="autoupdate" if="upload.github">
 		<github.fullrelease
@@ -702,7 +615,7 @@
 		</s3upload>
 	</target>
 
-	<target name="deploy" description="Deploy to sourceforge/googlecode/ftp/github/s3" depends="sourceforge,google,ftp,github,s3">
+	<target name="deploy" description="Deploy to sourceforge/ftp/github/s3" depends="sourceforge,ftp,github,s3">
 		<!-- At the moment deploy requires nothing else -->
 	</target>
 
