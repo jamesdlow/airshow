@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:limegreen="http://code.google.com/p/limegreen">
 <id>http://jameslow.com/work/airshow/</id>
 <title>AirShow AutoUpdate</title>
-<link href="https://raw.githubusercontent.com/jamesdlow/airshow/master//AirShow.xml" rel="self"/>
+<link href="https://raw.githubusercontent.com/jamesdlow/airshow/master/AirShow.xml" rel="self"/>
 <link href="http://jameslow.com/work/airshow/"/>
 <author>
 <name>Limegreen AutoUpdate Generator</name>
@@ -52,17 +52,17 @@ Add about image</content>
 <content>Optimise image scaling for 720p</content>
 </entry>
 <entry>
-<id>http://jameslow.com/work/airshow/?limegreenbuild=127</id>
+<id>https://github.com/jamesdlow/airshow/releases/tag/0.4</id>
 <title>AirShow 0.4 (build 127)</title>
 <limegreen:build>127</limegreen:build>
 <limegreen:version>0.4</limegreen:version>
 <limegreen:experimental>false</limegreen:experimental>
 <updated>2014-10-30T20:26:19+00:00</updated>
-<link href="http://jameslow.com/work/airshow/?limegreenbuild=127"/>
-<link href="https://github.com/jamesdlow/airshow/releases/download/0.4//AirShow-win-0.4.zip" length="1248523" rel="enclosure" title="AirShow Win Zip" type="application/zip"/>
-<link href="https://github.com/jamesdlow/airshow/releases/download/0.4//AirShow-mac-0.4.zip" length="1067661" rel="enclosure" title="AirShow Mac Zip" type="application/zip"/>
-<link href="https://github.com/jamesdlow/airshow/releases/download/0.4//AirShow-other-0.4.zip" length="969520" rel="enclosure" title="AirShow Other Zip" type="application/zip"/>
-<link href="https://github.com/jamesdlow/airshow/releases/download/0.4//AirShow-0.4.dmg" length="1104467" rel="enclosure" title="AirShow Mac Disk Image" type="application/octet-stream"/>
+<link href="https://github.com/jamesdlow/airshow/releases/tag/0.4"/>
+<link href="https://github.com/jamesdlow/airshow/releases/download/0.4/AirShow-win-0.4.zip" length="1248523" rel="enclosure" title="AirShow Win Zip" type="application/zip"/>
+<link href="https://github.com/jamesdlow/airshow/releases/download/0.4/AirShow-mac-0.4.zip" length="1067661" rel="enclosure" title="AirShow Mac Zip" type="application/zip"/>
+<link href="https://github.com/jamesdlow/airshow/releases/download/0.4/AirShow-other-0.4.zip" length="969520" rel="enclosure" title="AirShow Other Zip" type="application/zip"/>
+<link href="https://github.com/jamesdlow/airshow/releases/download/0.4/AirShow-0.4.dmg" length="1104467" rel="enclosure" title="AirShow Mac Disk Image" type="application/octet-stream"/>
 <content>New version hosted on GitHub</content>
 </entry>
 </feed>

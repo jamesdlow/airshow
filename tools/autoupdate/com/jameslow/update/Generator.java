@@ -12,7 +12,6 @@ import com.jameslow.*;
 public class Generator extends Task implements WindowListener, ItemListener, ActionListener {
 	//Other
 	private volatile boolean active = true;
-	private String versionpage;
 	private boolean experimental;
 	private JFrame frame = new JFrame();
 	private JLabel contentlabel = new JLabel("Enter version information (html ok) here:");
@@ -21,7 +20,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	private JScrollPane contentscroll = new JScrollPane(contenttextarea);
 	
 	private JLabel versionlabel = new JLabel("Enter a unique link for this build here:");
-	private JTextField versionpagefield = new JTextField();
+	private JTextField releaselinkfield = new JTextField();
 	private JCheckBox experientalbutton = new JCheckBox("This is an experimental build",false);
 	private JPanel small = new JPanel();
 	private JButton donebutton = new JButton("Done");
@@ -35,6 +34,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	private String atompath;
 	private String appname;
 	private String apppage;
+	private String releaselink;
 	private String applinkbase;
 	private String xmllinkbase;
 
@@ -56,7 +56,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	private static final String LIMEGREEN_BUILD = "limegreen:build";
 	private static final String LIMEGREEN_VERSION = "limegreen:version";
 	private static final String LIMEGREEN_EXPERIMENTAL = "limegreen:experimental";
-	private static final String LIMEGREEN_XMLNS = "http://code.google.com/p/limegreen";
+	private static final String LIMEGREEN_XMLNS = "http://github.com/jamesdlow/limegreen/";
 	private static final String ATOM_FEED = "feed";
 	private static final String ATOM_XMLNS = "http://www.w3.org/2005/Atom";
 	private static final String ATOM_ENTRY = "entry";
@@ -80,6 +80,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	private static final String s = "/";
 	private static final String d = ".";
 	private static final String VERSION = "%version%";
+	private static final String BUILD = "%build%";
 
 	public Generator() { }
 	public void init() {
@@ -107,7 +108,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		pane.add(contentscroll,BorderLayout.CENTER);
 		bottompanel.setLayout(new GridLayout(2,2));
 		bottompanel.add(versionlabel);
-		bottompanel.add(versionpagefield);
+		bottompanel.add(releaselinkfield);
 		bottompanel.add(experientalbutton);
 			small.add(donebutton);
 		bottompanel.add(small);
@@ -152,6 +153,9 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	public void setApppage(String apppage) {
 		this.apppage = apppage;
 	}
+	public void setReleaselink(String releaselink) {
+		this.releaselink = releaselink;
+	}
 	public void setApplinkbase(String applinkbase) {
 		this.applinkbase = applinkbase;
 	}
@@ -181,7 +185,9 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 	public void setSourcezip(String sourcezip) {
 		this.sourcezip = sourcezip;
 	}
-	
+	private String addFile(String path, String file) {
+		return path + (path.endsWith(s) ? "" : s) + file;
+	}
 	public void createXML() {
 		//Create general stuff
 		XMLHelper helper = new XMLHelper(atompath,ATOM_FEED);
@@ -195,7 +201,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		for (int i=0; i < links.length; i++) {
 			String rel = links[i].getAttribute(ATOM_LINK_REL);
 			if (ATOM_LINK_REL_SELF.compareTo(rel) == 0) {
-				links[i].setAttribute(ATOM_LINK_HREF,xmllinkbase+s+atomfile);
+				links[i].setAttribute(ATOM_LINK_HREF,addFile(xmllinkbase,atomfile));
 				doneself = true;
 			} else {
 				links[i].setAttribute(ATOM_LINK_HREF,apppage);
@@ -205,7 +211,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		if (!doneself) {
 			XMLHelper link = helper.createSubNode(ATOM_LINK);
 			link.setAttribute(ATOM_LINK_REL,ATOM_LINK_REL_SELF);
-			link.setAttribute(ATOM_LINK_HREF,xmllinkbase+s+atomfile);
+			link.setAttribute(ATOM_LINK_HREF,addFile(xmllinkbase,atomfile));
 		}
 		if (!donepage) {
 			XMLHelper link = helper.createSubNode(ATOM_LINK);
@@ -216,13 +222,13 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 
 		//Create new entry
 		XMLHelper entry = helper.createSubNode(ATOM_ENTRY);
-		entry.setValue(ATOM_ID,versionpage);
+		entry.setValue(ATOM_ID,releaselink);
 		entry.setValue(ATOM_TITLE,appname+" "+version+" (build "+build+")");
 		entry.setValue(LIMEGREEN_BUILD,""+build);
 		entry.setValue(LIMEGREEN_VERSION,""+version);
 		entry.setValue(LIMEGREEN_EXPERIMENTAL,""+experimental);
 		entry.setValue(ATOM_UPDATED,timestamp);
-		entry.setAttribute(ATOM_LINK,ATOM_LINK_HREF,versionpage);
+		entry.setAttribute(ATOM_LINK,ATOM_LINK_HREF,releaselink);
 		createZipLink(entry,"Win",winzip);
 		createZipLink(entry,"Mac", maczip);
 		createZipLink(entry,"Other",otherzip);
@@ -251,7 +257,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 			link.setAttribute(ATOM_LINK_TYPE, type);
 			link.setAttribute(ATOM_TITLE, fulltitle);
 			link.setAttribute(ATOM_LINK_LENGTH, ""+(new File(filepath)).length());
-			link.setAttribute(ATOM_LINK_HREF, applinkbase+s+getFileName(filepath));
+			link.setAttribute(ATOM_LINK_HREF, addFile(applinkbase, getFileName(filepath)));
 		}
 	}
 	private String getFileName(String filepath) {
@@ -259,7 +265,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		return file.getName();
 	}
 	private String replaceVersion(String str) {
-		return str.replaceAll(VERSION, version);
+		return str.replaceAll(VERSION, version).replaceAll(BUILD, build);
 	}
 	public void execute() {
 		init();
@@ -267,6 +273,7 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		xmllinkbase = xmllinkbase != null ? xmllinkbase : applinkbase;
 		xmllinkbase = replaceVersion(xmllinkbase);
 		applinkbase = replaceVersion(applinkbase);
+		releaselink = replaceVersion(releaselink);
 		atomfile = getFileName(atompath);
 		
 		//timestamp
@@ -276,17 +283,14 @@ public class Generator extends Task implements WindowListener, ItemListener, Act
 		timestamp = timestamp.substring(0, timestamp.length()-2) + ":" + timestamp.substring(timestamp.length()-2);
 		
 		//show user form
-		String versionpagedefault = apppage+(apppage.lastIndexOf("?")>=0 ? "&" : "?" )+LIMEGREENBUILD+"="+build;
-		versionpagefield.setText(versionpagedefault);
+		releaselinkfield.setText(releaselink);
 		frame.show();
 		
 		while (active) {
 			//this will finish once the user clicks done
 		}
-		versionpage = versionpagefield.getText();
-		if (versionpage == null || "".compareTo(versionpage) == 0) {
-			versionpage = versionpagedefault;
-		}
+		String releaselinkmanual = releaselinkfield.getText();
+		releaselink = releaselinkmanual == null || "".compareTo(releaselinkmanual) == 0 ? releaselink : releaselinkmanual;
 		
 		createXML();
 		System.out.println("AutoUpdate xml generated: " + atomfile);

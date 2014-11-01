@@ -56,6 +56,12 @@
 	<!-- Ant tasks -->
 	<taskdef classname="com.jameslow.update.Generator" classpath="${autoupdate}" name="autoupdate"/>
 
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="${tools}/antcontrib/ant-contrib-1.0b3.jar"/>
+		</classpath>
+	</taskdef>
+
 	<fileset id="jar.jars" dir="${jarbundler}">
 		<include name="**/*.jar"/>
 	</fileset>
@@ -136,16 +142,16 @@
 	
 	<!-- Which uploads to do -->
 	<condition property="upload.s3">
-		<matches string="${aws.key}" pattern=".+"/>
+		<matches string="${aws.s3}" pattern=".+"/>
 	</condition>
 	<condition property="upload.ftp">
-		<matches string="${ftp.username}" pattern=".+"/>
+		<matches string="${ftp.server}" pattern=".+"/>
 	</condition>
 	<condition property="upload.github">
-		<matches string="${github.tokenuser}" pattern=".+"/>
+		<matches string="${github.repo}" pattern=".+"/>
 	</condition>
 	<condition property="upload.sourceforge">
-		<matches string="${sourceforge.username}" pattern=".+"/>
+		<matches string="${sourceforge.project}" pattern=".+"/>
 	</condition>
 	
 	<!-- Do auto update -->
@@ -202,6 +208,43 @@
 		</and>
 	</condition>
 	<!-- Auto update paths -->
+	<condition property="apppage" value="${autoupdate.apppage}">
+		<matches string="${autoupdate.apppage}" pattern=".+"/>
+	</condition>
+	<condition property="apppage" value="https://github.com/${github.repouser}/${github.repo}/">
+		<and>
+			<not><isset property="apppage"/></not>
+			<isset property="autoupdate.github"/>
+		</and>
+	</condition>
+	<condition property="apppage" value="https://sourceforge.net/projects/${sourceforge.project}/">
+		<and>
+			<not><isset property="apppage"/></not>
+			<isset property="autoupdate.sourceforge"/>
+		</and>
+	</condition>
+	<propertyfile file="${props}">
+		<entry key="autoupdate.apppage" value="${apppage}"/>
+	</propertyfile>
+	<!-- Release paths -->
+	<condition property="releaselink" value="${autoupdate.releaselink}">
+		<matches string="${autoupdate.releaselink}" pattern=".+"/>
+	</condition>
+	<condition property="releaselink" value="https://github.com/${github.repouser}/${github.repo}/releases/tag/%version%/">
+		<and>
+			<not><isset property="releaselink"/></not>
+			<isset property="autoupdate.github"/>
+		</and>
+	</condition>
+	<condition property="releaselink" value="${apppage}?version=%version%">
+		<and>
+			<not><isset property="releaselink"/></not>
+		</and>
+	</condition>
+	<propertyfile file="${props}">
+		<entry key="autoupdate.releaselink" value="${releaselink}"/>
+	</propertyfile>
+	<!-- Download paths -->
 	<condition property="applinkbase" value="${autoupdate.applinkbase}">
 		<matches string="${autoupdate.applinkbase}" pattern=".+"/>
 	</condition>
@@ -274,6 +317,15 @@
 		<pathelement path="${applejava}/AppleJavaExtensions.jar"/>
 		<pathelement path="${jsmooth}/jnismooth.jar"/>
 	</path>
+	
+	<target name="sort.props" description="Sort properties file after ant messes with the order">
+		<move tofile="temp.properties" file="${props}">
+			<filterchain>
+				<sortfilter/>
+			</filterchain>
+		</move>
+		<move tofile="${props}" file="temp.properties"/>
+	</target>
 	
 	<target name="secret.copy" description="Copy secret file if it doesn't exist" if="copy.do">
 		<copy file="${secret.example}" tofile="${secret}" overwrite="false"/>
@@ -406,7 +458,7 @@
 		</zip>
 	</target>
 
-	<target name="jar" depends="jar.onejar,jar.include" description="Build jar">
+	<target name="jar" depends="jar.onejar,jar.include,sort.props" description="Build jar">
 		<!-- At the moment jar requires nothing else -->
 	</target>
 	<target name="exe" depends="jar,create.jsmooth" description="Build exe">
@@ -506,11 +558,11 @@
 		<java jar="${jarfile}" fork="yes" failonerror="true"/>
 	</target>
 
-	<target name="build" description="Build exe,app" depends="exe,app">
+	<target name="build" description="Build exe,app" depends="exe,app,sort.props">
 		<!-- At the moment build requires nothing else -->
 	</target>
 		
-	<target name="release" description="Create release dmg/zips" depends="dmg,win.zip,other.zip,source.zip">
+	<target name="release" description="Create release dmg/zips" depends="dmg,win.zip,other.zip,source.zip,sort.props">
 		<!-- At the moment release requires nothing else -->
 	</target>
 	
@@ -520,10 +572,11 @@
 		</condition>
 		<autoupdate
 			atompath="${atompath}"
-			apppage="${autoupdate.apppage}"
+			apppage="${apppage}"
 			appname="${application.name}"
 			applinkbase="${applinkbase}"
 			xmllinkbase="${xmllinkbase}"
+			releaselink="${releaselink}"
 			macdmg="${mac.dmg.full}"
 			maczip="${mac.zip.full}"
 			winzip="${win.zip.full}"
@@ -624,7 +677,7 @@
 		<!-- At the moment deploy requires nothing else -->
 	</target>
 
-	<target name="clean" description="Remove build and dist directories">
+	<target name="clean" description="Remove build and dist directories" depends="sort.props">
 		<delete dir="${build}"/>
 	</target>
 </project>
