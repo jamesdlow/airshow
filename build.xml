@@ -592,7 +592,7 @@
 			repo="${github.repo}"
 			tokenuser="${github.tokenuser}"
 			token="${github.token}"
-			tag="${build.version}"
+			tag="${new.version}"
 			body="${version.info}">
 			<fileset dir="${dist}" casesensitive="yes">
 				<include name="${mac.dmg}"/>
